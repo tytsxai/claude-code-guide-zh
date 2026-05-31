@@ -13,6 +13,8 @@
     {"find": "### 协同模式 7：会话间上下文保留 [COMMUNITY]\n\n**项目 CLAUDE.md：**", "replace": "### 协同模式 7：会话间上下文保留 [COMMUNITY]\n\n结合 CLAUDE.md + Skills 实现连续性：\n\n**项目 CLAUDE.md：**"},
     {"find": "**第一阶段：理解**", "replace": "**第 1 阶段：理解**"},
     {"find": "**阶段 2: Plan**", "replace": "**第 2 阶段：计划**"},
-    {"find": "**阶段4：验证**", "replace": "**第 4 阶段：验证**"}
+    {"find": "**阶段4：验证**", "replace": "**第 4 阶段：验证**"},
+    {"find": "`/技能名称`", "replace": "`/skill-name`"},
+    {"find": "直接使用 `/skill-name` 直接调用", "replace": "直接使用 `/skill-name` 调用"}
   ]
 }
