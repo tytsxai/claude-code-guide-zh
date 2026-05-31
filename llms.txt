@@ -1,0 +1,43 @@
+# claude-code-guide-zh
+
+> 持续自动同步、用 DeepSeek 机器翻译的 **Claude Code CLI 中文指南镜像**，附带一套开源的「英文 Markdown → 中文」自动翻译流水线（Python + GitHub Actions）。A continuously auto-synced, machine-translated **Chinese mirror** of the Claude Code CLI guide, plus the open-source pipeline that keeps it current with the upstream English source.
+
+本项目包含两部分：(1) 上游英文指南 `Cranot/claude-code-guide` 的完整简体中文译文；(2) 实现该翻译的可复用流水线。
+
+**重要声明**：本项目**不是** Anthropic 官方项目，**不是**官方 Claude Code 文档，与 Anthropic、Claude Code 团队及上游作者**无任何隶属关系**。译文为机器自动翻译，可能存在误差，**一切以[官方英文文档](https://code.claude.com/docs/en/overview)与上游仓库为准**。
+
+关键事实 / Key facts:
+- 主题 Topic: Claude Code（Anthropic 官方的终端 agentic AI 编程助手 / CLI）的中文学习指南。
+- 上游 Upstream: https://github.com/Cranot/claude-code-guide （英文原文，本项目据此翻译）。
+- 翻译引擎 Engine: DeepSeek API，默认模型 `deepseek-v4-flash`，可切换 `deepseek-chat` / `deepseek-reasoner`。
+- 技术栈 Stack: Python 3.10+（仅依赖 requests）、GitHub Actions（每小时定时同步）。
+- 入口命令 CLI: `python -m tools.sync`（支持 `--dry-run`、`--full`）。
+- 适用对象 Audience: 中文 Claude Code 用户、文档本地化维护者、研究 LLM 文档翻译流水线的开发者。
+- 许可 License: 翻译衍生作品，版权归上游作者，以官方英文为准（见 NOTICE）。
+
+核心特性 / Core features: 增量同步（git diff，仅翻译变更）、结构保真翻译（标题/正文/代码分离，代码块逐字节保留、不送模型）、锚点自愈（页内链接按中文标题重写）、多 Key 轮询与故障转移、章节级缓存、术语一致性（glossary + fixups 双层）、密钥仅来自环境变量 / GitHub Secrets。
+
+## 阅读内容 / Read
+
+- [完整中文指南 Full Chinese guide](./content/README.md)：上游英文指南的完整简体中文译文（安装、命令、MCP、Hooks、Skills、Plugins、Subagents、SDK、配置、故障排查）。
+- [同步更新日志 Sync log](./content/update-log-zh.md)：每次自动同步与翻译的记录。
+
+## 项目文档 / Project docs
+
+- [README](./README.md)：项目总览、快速开始、配置、使用场景、限制。
+- [架构说明 Architecture](./docs/ARCHITECTURE.md)：结构保真翻译引擎的设计（标题/正文/代码分离、锚点改写、多 Key 并发、缓存）。
+- [常见问题 FAQ](./docs/FAQ.md)：是否官方、译文准确性与时效、换模型/换仓库、代码为何不译、成本与许可等。
+- [配置文件 config.py](./tools/config.py)：全部环境变量与默认值的权威定义。
+
+## 常见问答 / Q&A
+
+- 问：这是 Claude Code 的官方中文文档吗？答：不是。是非官方社区翻译，以官方英文为准。
+- 问：Claude Code 是什么？答：Anthropic 的终端 agentic AI 编程助手 / CLI，支持 MCP、Hooks、Skills、Plugins、Subagents。
+- 问：译文多久更新？答：GitHub Actions 每小时检查上游，有更新即自动翻译并提交。
+- 问：能换翻译模型或目标仓库吗？答：能。改 `DEEPSEEK_MODEL` 换模型，改 `UPSTREAM_REPO` 翻译其它英文 Markdown 仓库。
+- 问：为什么代码块/注释保持英文？答：有意为之，代码逐字保留以保证技术准确与可执行性。
+- 问：怎么开始？答：读中文指南无需安装；运行流水线见 `python -m tools.sync`（`--dry-run` 预览、`--full` 全量）。
+
+## 关键词 / Keywords
+
+Claude Code 中文, Claude Code 中文文档, Claude Code 中文指南, Claude Code 教程, Claude Code CLI, Anthropic Claude Code, AI 编程助手, agentic coding, MCP, Model Context Protocol, Hooks, Skills, Plugins, Subagents, DeepSeek 翻译, 文档自动翻译, Markdown 翻译, i18n 本地化, GitHub Actions 自动同步, 多 Key 轮询, 增量翻译缓存.

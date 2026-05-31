@@ -1,7 +1,7 @@
-> **🌏 中文翻译版** · 本文档由机器自动翻译并持续同步自上游英文仓库
-> [Cranot/claude-code-guide](https://github.com/Cranot/claude-code-guide)（作者 [@Cranot](https://github.com/Cranot)）。
-> 译文仅供学习参考，**以官方英文原文为准**；如有翻译问题欢迎提 Issue。
-> 由 [`claude-code-guide-zh`](https://github.com/Cranot) 自动化流水线生成 · 翻译引擎：DeepSeek。
+> **🌏 中文翻译版** · 本文档由机器自动翻译，并由 [`claude-code-guide-zh`](https://github.com/tytsxai/claude-code-guide-zh) 流水线**每小时**持续同步自上游英文仓库
+> [Cranot/claude-code-guide](https://github.com/Cranot/claude-code-guide)（原作者 [@Cranot](https://github.com/Cranot)）。
+> 译文仅供学习参考，**以[官方英文文档](https://code.claude.com/docs/en/overview)为准**；翻译问题欢迎到[本仓库](https://github.com/tytsxai/claude-code-guide-zh/issues) 提 Issue。
+> 翻译引擎：DeepSeek。
 
 ---
 

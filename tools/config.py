@@ -63,11 +63,17 @@ CONCURRENCY = int(os.environ.get("TRANSLATE_CONCURRENCY", "6"))
 _temp = os.environ.get("DEEPSEEK_TEMPERATURE")
 TEMPERATURE = float(_temp) if _temp not in (None, "") else None
 
+# This project's own repo (for the attribution banner's project link / Issue link).
+PROJECT_REPO_URL = os.environ.get(
+    "PROJECT_REPO_URL", "https://github.com/tytsxai/claude-code-guide-zh"
+)
+
 # Attribution banner prepended to the translated front-page guide (content/README.md).
-ATTRIBUTION_BANNER = """> **🌏 中文翻译版** · 本文档由机器自动翻译并持续同步自上游英文仓库
-> [{repo_name}]({repo_url})（作者 [@{author}](https://github.com/{author})）。
-> 译文仅供学习参考，**以官方英文原文为准**；如有翻译问题欢迎提 Issue。
-> 由 [`claude-code-guide-zh`](https://github.com/{author}) 自动化流水线生成 · 翻译引擎：DeepSeek。
+# {repo_name}/{repo_url}/{author} = upstream source; {project_url} = THIS project.
+ATTRIBUTION_BANNER = """> **🌏 中文翻译版** · 本文档由机器自动翻译，并由 [`claude-code-guide-zh`]({project_url}) 流水线**每小时**持续同步自上游英文仓库
+> [{repo_name}]({repo_url})（原作者 [@{author}](https://github.com/{author})）。
+> 译文仅供学习参考，**以[官方英文文档](https://code.claude.com/docs/en/overview)为准**；翻译问题欢迎到[本仓库]({project_url}/issues) 提 Issue。
+> 翻译引擎：DeepSeek。
 
 ---
 

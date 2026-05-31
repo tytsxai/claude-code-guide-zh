@@ -129,6 +129,7 @@ def main() -> int:
                     repo_name="Cranot/claude-code-guide",
                     repo_url="https://github.com/Cranot/claude-code-guide",
                     author="Cranot",
+                    project_url=config.PROJECT_REPO_URL,
                 )
                 translated = banner + translated
             dest = config.CONTENT_DIR / rel

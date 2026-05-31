@@ -1,0 +1,50 @@
+[project]
+name = "claude-code-guide-zh"
+version = "0.1.0"
+description = "持续自动同步、用 DeepSeek 机器翻译的 Claude Code CLI 中文指南镜像 + 开源「英文 Markdown → 中文」翻译流水线 / Auto-synced, machine-translated Chinese mirror of the Claude Code CLI guide, plus its open-source translation pipeline."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["requests>=2.31,<3"]
+authors = [{ name = "tytsxai" }]
+keywords = [
+    "claude-code",
+    "claude-code-chinese",
+    "claude-code-中文",
+    "anthropic",
+    "agentic-coding",
+    "mcp",
+    "model-context-protocol",
+    "deepseek",
+    "translation",
+    "markdown-translation",
+    "i18n",
+    "localization",
+    "github-actions",
+    "documentation",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Documentation",
+    "Topic :: Software Development :: Internationalization",
+    "Natural Language :: Chinese (Simplified)",
+    "Natural Language :: English",
+]
+# Translation output is a derivative work of the upstream guide; see NOTICE.
+license = { text = "Translation is a derivative work of Cranot/claude-code-guide (see NOTICE). Pipeline code provided as-is." }
+
+[project.urls]
+Homepage = "https://github.com/tytsxai/claude-code-guide-zh"
+Repository = "https://github.com/tytsxai/claude-code-guide-zh"
+"Chinese Guide" = "https://github.com/tytsxai/claude-code-guide-zh/blob/main/content/README.md"
+Upstream = "https://github.com/Cranot/claude-code-guide"
+Issues = "https://github.com/tytsxai/claude-code-guide-zh/issues"
+
+[project.scripts]
+ccg-sync = "tools.sync:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["tools"]
