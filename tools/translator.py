@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import threading
 import time
 
@@ -57,6 +58,27 @@ SYSTEM_PROMPT = """你是一名资深技术文档翻译专家,负责把 Claude C
 7. 输入可能是文档的一个片段,可能从句子中间开始或结束 —— 按原样翻译,不要补全或删减。"""
 
 
+# Only 0-3 leading spaces count as an ATX heading; 4+ spaces is an indented code
+# block (e.g. an example CLAUDE.md), whose `#` lines must NOT be touched.
+_STRAY_HEADING = re.compile(r"(?m)^( {0,3})#{1,6}[ \t]+(.*)$")
+
+
+def _strip_stray_headings(text: str) -> str:
+    """Prose segments contain no headings by construction; the model occasionally
+    hallucinates one (prepends `#`). Demote any such line back to plain prose."""
+    return _STRAY_HEADING.sub(r"\1\2", text)
+
+
+HEADING_SYS = """你是技术文档翻译专家。下面每一行是一个 Markdown 标题文本,格式为 `<<<编号>>> 英文标题`。
+把每个标题翻译成简体中文,严格遵守:
+1. 逐条翻译,输出必须保持完全相同的 `<<<编号>>> 译文` 格式,编号和行数与输入一一对应,不增不减不合并。
+2. 不要输出 Markdown 的 # 号(只翻译标题文字本身)。
+3. 保留产品名与技术术语英文:Claude Code、MCP、CLI、API、SDK、Hooks、Skills、Plugins、CLAUDE.md 等。
+4. 保留形如 [OFFICIAL]、[COMMUNITY]、[EXPERIMENTAL]、[NEW] 的标记原样不译。
+5. 保留标题中的行内代码(反引号)、命令名、版本号原样。
+6. 只输出带编号的译文,不要任何解释或额外文字。"""
+
+
 def _glossary_hint(glossary: dict) -> str:
     keep = glossary.get("keep") or []
     mapping = glossary.get("map") or {}
@@ -74,9 +96,12 @@ class Translator:
         self.pool = KeyPool(config.load_api_keys())
         self.glossary = glossary or config.load_glossary()
         self._glossary_hint = _glossary_hint(self.glossary)
+        self._sys_translate = SYSTEM_PROMPT + (
+            "\n\n术语表:\n" + self._glossary_hint if self._glossary_hint else "")
         self.cache = self._load_cache()
         self._cache_dirty = False
         self.stats = {"hits": 0, "misses": 0, "api_calls": 0}
+        self._lock = threading.Lock()
 
     # ---- chunk cache -------------------------------------------------------
     def _load_cache(self) -> dict:
@@ -105,19 +130,19 @@ class Translator:
         return h.hexdigest()
 
     # ---- API call ----------------------------------------------------------
-    def _call_api(self, chunk: str) -> str:
-        user_content = chunk
+    def _call_api(self, content: str, system_prompt: str | None = None) -> str:
         messages = [
-            {"role": "system", "content": SYSTEM_PROMPT + (
-                "\n\n术语表:\n" + self._glossary_hint if self._glossary_hint else "")},
-            {"role": "user", "content": user_content},
+            {"role": "system", "content": system_prompt or self._sys_translate},
+            {"role": "user", "content": content},
         ]
         payload = {
             "model": config.DEEPSEEK_MODEL,
             "messages": messages,
-            "temperature": config.TEMPERATURE,
             "stream": False,
+            "max_tokens": config.MAX_OUTPUT_TOKENS,
         }
+        if config.TEMPERATURE is not None:
+            payload["temperature"] = config.TEMPERATURE
         url = config.DEEPSEEK_BASE_URL.rstrip("/") + "/chat/completions"
 
         last_err = None
@@ -125,7 +150,8 @@ class Translator:
         for attempt in range(attempts):
             idx, key = self.pool.acquire()
             try:
-                self.stats["api_calls"] += 1
+                with self._lock:
+                    self.stats["api_calls"] += 1
                 resp = requests.post(
                     url,
                     headers={"Authorization": f"Bearer {key}",
@@ -140,7 +166,21 @@ class Translator:
 
             if resp.status_code == 200:
                 data = resp.json()
-                return data["choices"][0]["message"]["content"]
+                choice = data["choices"][0]
+                content = choice["message"].get("content") or ""
+                finish = choice.get("finish_reason")
+                # Truncated output would silently corrupt the doc — surface it.
+                if finish == "length":
+                    last_err = RuntimeError(
+                        "output truncated (finish_reason=length); raise DEEPSEEK_MAX_TOKENS "
+                        "or lower MAX_CHUNK_CHARS"
+                    )
+                    raise last_err
+                if not content.strip():
+                    last_err = RuntimeError("empty content from API")
+                    time.sleep(min(2 ** attempt, 20))
+                    continue
+                return content
 
             # Rate limited or quota -> quarantine this key, try the next.
             if resp.status_code in (429, 402):
@@ -163,21 +203,145 @@ class Translator:
 
         raise RuntimeError(f"Translation failed after {attempts} attempts: {last_err}")
 
-    def translate_chunk(self, chunk: str) -> str:
+    def translate_chunk(self, chunk: str, cache_tag: str = "") -> str:
         if not chunk.strip():
             return chunk
-        ck = self._cache_key(chunk)
-        if ck in self.cache:
-            self.stats["hits"] += 1
-            return self.cache[ck]
-        self.stats["misses"] += 1
-        translated = self._call_api(chunk)
-        self.cache[ck] = translated
-        self._cache_dirty = True
-        return translated
+        # Preserve the EXACT leading/trailing whitespace around the segment.
+        # The model strips boundary newlines, which would glue segments together
+        # (e.g. prose onto the next code fence, breaking Markdown structure).
+        core = chunk.strip()
+        i = chunk.find(core)
+        lead, trail = chunk[:i], chunk[i + len(core):]
+        ck = self._cache_key(cache_tag + core)
+        with self._lock:
+            if ck in self.cache:
+                self.stats["hits"] += 1
+                return lead + self.cache[ck] + trail
+            self.stats["misses"] += 1
+        translated = self._call_api(core).strip()
+        with self._lock:
+            self.cache[ck] = translated
+            self._cache_dirty = True
+        return lead + translated + trail
 
-    def translate_document(self, text: str) -> str:
+    def _translate_body(self, text: str) -> str:
+        """Translate a non-heading block.
+
+        Fenced code blocks are kept byte-for-byte verbatim (never sent to the
+        model), guaranteeing exact fence/code preservation. Only prose between
+        code blocks is translated, sub-split if it exceeds the chunk size.
+        """
+        from . import structured_doc as sd
         from .markdown_chunker import split_markdown
 
-        chunks = split_markdown(text, config.MAX_CHUNK_CHARS)
-        return "".join(self.translate_chunk(c) for c in chunks)
+        out: list[str] = []
+        for kind, seg in sd.split_code_segments(text):
+            if kind == "code" or not seg.strip():
+                out.append(seg)
+            elif len(seg) <= config.MAX_CHUNK_CHARS:
+                out.append(_strip_stray_headings(self.translate_chunk(seg)))
+            else:
+                out.append(_strip_stray_headings("".join(
+                    self.translate_chunk(c) for c in split_markdown(seg, config.MAX_CHUNK_CHARS))))
+        return "".join(out)
+
+    # ---- heading batch translation (structure-critical) --------------------
+    def _translate_headings(self, headings: list[str]) -> list[str]:
+        """Translate heading texts 1:1, count guaranteed (cache + batch + fallback)."""
+        results: dict[str, str] = {}
+        todo: list[str] = []
+        for h in headings:
+            ck = self._cache_key("HEADING::" + h)
+            with self._lock:
+                hit = self.cache.get(ck)
+            if hit is not None:
+                results[h] = hit
+                with self._lock:
+                    self.stats["hits"] += 1
+            elif h not in results and h not in todo:
+                todo.append(h)
+
+        groups = [todo[i : i + 50] for i in range(0, len(todo), 50)]
+        if groups:
+            from concurrent.futures import ThreadPoolExecutor
+
+            workers = max(1, min(config.CONCURRENCY, len(groups)))
+            with ThreadPoolExecutor(max_workers=workers) as ex:
+                batch_results = list(ex.map(self._heading_batch, groups))
+            for group, translated in zip(groups, batch_results):
+                for src, tr in zip(group, translated):
+                    results[src] = tr
+                    with self._lock:
+                        self.cache[self._cache_key("HEADING::" + src)] = tr
+                        self._cache_dirty = True
+                        self.stats["misses"] += 1
+        return [results[h] for h in headings]
+
+    def _heading_batch(self, group: list[str]) -> list[str]:
+        numbered = "\n".join(f"<<<{i}>>> {h}" for i, h in enumerate(group))
+        out = self._call_api(numbered, HEADING_SYS)
+        parsed: dict[int, str] = {}
+        for m in re.finditer(r"<<<(\d+)>>>[ \t]*(.*)", out):
+            parsed[int(m.group(1))] = m.group(2).strip()
+        # Fallback: any index the batch failed to return gets translated alone.
+        result = []
+        for i, h in enumerate(group):
+            if i in parsed and parsed[i]:
+                result.append(parsed[i])
+            else:
+                single = self._call_api(f"<<<0>>> {h}", HEADING_SYS)
+                ms = re.search(r"<<<0>>>[ \t]*(.*)", single)
+                result.append(ms.group(1).strip() if ms and ms.group(1).strip() else h)
+        return result
+
+    # ---- top-level: structure-preserving document translation --------------
+    def translate_markdown(self, text: str) -> str:
+        from concurrent.futures import ThreadPoolExecutor
+
+        from . import structured_doc as sd
+
+        nodes = sd.parse_nodes(text)
+        heading_nodes = [n for n in nodes if n["type"] == "heading"]
+        body_nodes = [n for n in nodes if n["type"] == "body"]
+
+        # 1. Headings: count- and level-preserving.
+        en_headings = [n["text"] for n in heading_nodes]
+        zh_headings = self._translate_headings(en_headings) if en_headings else []
+
+        # 2. Bodies: translate in parallel across the key pool.
+        workers = max(1, min(config.CONCURRENCY, max(1, len(body_nodes))))
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            zh_bodies = list(ex.map(lambda n: self._translate_body(n["text"]), body_nodes))
+
+        # 3. Reassemble in original order, copying heading levels verbatim.
+        out: list[str] = []
+        hi = bi = 0
+        for n in nodes:
+            if n["type"] == "heading":
+                out.append("#" * n["level"] + " " + zh_headings[hi] + n["nl"])
+                hi += 1
+            else:
+                out.append(zh_bodies[bi])
+                bi += 1
+        assembled = "".join(out)
+
+        # 4. Deterministic fixups (terminology normalization + known corrections).
+        #    May alter heading text, so apply BEFORE recomputing anchor slugs.
+        from . import fixups as fx
+
+        assembled, n_fix = fx.apply_fixups(assembled)
+        self.stats["fixups"] = self.stats.get("fixups", 0) + n_fix
+
+        # 5. Rewrite anchors: English slug -> Chinese slug, using the POST-fixup
+        #    heading text so links stay consistent with any normalized headings.
+        fixed_nodes = sd.parse_nodes(assembled)
+        fixed_zh = [n["text"] for n in fixed_nodes if n["type"] == "heading"]
+        target_headings = fixed_zh if len(fixed_zh) == len(en_headings) else zh_headings
+        slug_map = sd.build_slug_map(en_headings, target_headings)
+        assembled, n_rewritten = sd.rewrite_anchors(assembled, slug_map)
+        self.stats["anchors_rewritten"] = self.stats.get("anchors_rewritten", 0) + n_rewritten
+        return assembled
+
+    # Backwards-compatible alias.
+    def translate_document(self, text: str) -> str:
+        return self.translate_markdown(text)

@@ -1,0 +1,18 @@
+{
+  "_comment": "Deterministic post-translation corrections applied on every run (tools/fixups.py). 'normalize' unifies terminology globally; 'literal' fixes specific model slips. Applied AFTER translation but anchor integrity is re-derived, so heading-affecting normalizations stay link-safe.",
+  "normalize": {
+    "管道": "流水线",
+    "子智能体": "子代理",
+    "代理团队": "智能体团队"
+  },
+  "literal": [
+    {"find": "**:错误:**", "replace": "**错误：**"},
+    {"find": "**Issue: ", "replace": "**问题："},
+    {"find": "\n问题：Claude 无法看到最近的文件更改\n", "replace": "\n**问题：Claude 无法看到最近的文件更改**\n"},
+    {"find": "🔒 Perisions now respect content-level `ask` over tool-level `allow` (e.g., `allow: [\"Bash\"], ask: [\"Bash(rm *)\"]`)", "replace": "🔒 权限现在优先采用内容级别的 `ask` 而非工具级别的 `allow`（例如 `allow: [\"Bash\"], ask: [\"Bash(rm *)\"]`）"},
+    {"find": "### 协同模式 7：会话间上下文保留 [COMMUNITY]\n\n**项目 CLAUDE.md：**", "replace": "### 协同模式 7：会话间上下文保留 [COMMUNITY]\n\n结合 CLAUDE.md + Skills 实现连续性：\n\n**项目 CLAUDE.md：**"},
+    {"find": "**第一阶段：理解**", "replace": "**第 1 阶段：理解**"},
+    {"find": "**阶段 2: Plan**", "replace": "**第 2 阶段：计划**"},
+    {"find": "**阶段4：验证**", "replace": "**第 4 阶段：验证**"}
+  ]
+}

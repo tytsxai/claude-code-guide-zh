@@ -27,26 +27,41 @@ TRANSLATE_SUFFIXES = {".md", ".markdown"}
 SKIP_NAMES = {"README_OLD_BACKUP.md"}
 
 # ---- DeepSeek API ----------------------------------------------------------
-# NOTE: `deepseek-v4-flash` was requested but is not (yet) a real DeepSeek model.
-# Real models today: `deepseek-chat` (V3.x) and `deepseek-reasoner` (R1).
-# Override with the DEEPSEEK_MODEL env var the moment a new model ships.
+# `deepseek-v4-flash` is a real, light-reasoning model (verified live against the
+# API). It returns `reasoning_content` separately and spends a small reasoning
+# budget, so we set an explicit MAX_OUTPUT_TOKENS below to avoid truncation.
+# Alternatives: `deepseek-chat` (V3.x), `deepseek-reasoner` (R1).
 DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
+DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-v4-flash")
 
 # Multi-key load balancing / failover. Provide keys via either:
 #   DEEPSEEK_API_KEYS="key1,key2,key3"   (comma or whitespace separated)
 # or a single DEEPSEEK_API_KEY.
 def load_api_keys() -> list[str]:
     raw = os.environ.get("DEEPSEEK_API_KEYS") or os.environ.get("DEEPSEEK_API_KEY", "")
-    keys = [k.strip() for k in raw.replace("\n", ",").replace(" ", ",").split(",")]
-    return [k for k in keys if k]
+    for sep in (";", "\n", "\t", " "):
+        raw = raw.replace(sep, ",")
+    seen, keys = set(), []
+    for k in (k.strip() for k in raw.split(",")):
+        if k and k not in seen:
+            seen.add(k)
+            keys.append(k)
+    return keys
 
 
 # ---- Chunking / translation tuning ----------------------------------------
 MAX_CHUNK_CHARS = int(os.environ.get("MAX_CHUNK_CHARS", "6000"))
-REQUEST_TIMEOUT = int(os.environ.get("DEEPSEEK_TIMEOUT", "180"))
+REQUEST_TIMEOUT = int(os.environ.get("DEEPSEEK_TIMEOUT", "300"))
 MAX_RETRIES_PER_KEY = int(os.environ.get("MAX_RETRIES_PER_KEY", "3"))
-TEMPERATURE = float(os.environ.get("DEEPSEEK_TEMPERATURE", "0.2"))
+# Explicit output cap. DeepSeek's *default* is only 4096 tokens, which truncates
+# large chunks (measured: a 12k-char section needs ~4200 output tokens). v4-flash
+# also spends some budget on reasoning, so leave generous headroom.
+MAX_OUTPUT_TOKENS = int(os.environ.get("DEEPSEEK_MAX_TOKENS", "8192"))
+# Concurrent chunk translations. With multiple keys we fan out across them.
+CONCURRENCY = int(os.environ.get("TRANSLATE_CONCURRENCY", "6"))
+# Reasoning models (v4-flash, reasoner) can reject `temperature`; omit unless set.
+_temp = os.environ.get("DEEPSEEK_TEMPERATURE")
+TEMPERATURE = float(_temp) if _temp not in (None, "") else None
 
 # Attribution banner prepended to the translated front-page guide (content/README.md).
 ATTRIBUTION_BANNER = """> **🌏 中文翻译版** · 本文档由机器自动翻译并持续同步自上游英文仓库
