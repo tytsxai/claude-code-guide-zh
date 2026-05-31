@@ -1,0 +1,62 @@
+name: Sync & Translate
+
+# Pulls the latest upstream guide, translates changed Markdown into Chinese,
+# and commits the result. API keys come ONLY from repository Secrets.
+on:
+  schedule:
+    - cron: "0 * * * *"   # hourly
+  workflow_dispatch:       # manual trigger
+    inputs:
+      full:
+        description: "Re-translate everything (ignore sync state)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: sync-translate
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore translation cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/translations.json
+          key: translation-cache-${{ github.run_id }}
+          restore-keys: |
+            translation-cache-
+
+      - name: Run sync + translate
+        env:
+          DEEPSEEK_API_KEYS: ${{ secrets.DEEPSEEK_API_KEYS }}
+          DEEPSEEK_MODEL: ${{ vars.DEEPSEEK_MODEL || 'deepseek-chat' }}
+        run: |
+          python -m tools.sync ${{ (github.event_name == 'workflow_dispatch' && inputs.full) && '--full' || '' }}
+
+      - name: Commit translated content
+        run: |
+          git config user.name  "claude-code-guide-zh-bot"
+          git config user.email "actions@github.com"
+          git add content .sync-state.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore(sync): 自动同步并翻译上游更新 [skip ci]"
+            git push
+          fi

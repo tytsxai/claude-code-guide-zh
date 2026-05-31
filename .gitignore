@@ -1,0 +1,15 @@
+# Secrets — never commit
+.env
+*.key
+
+# Local caches (upstream clone + chunk translation cache)
+.cache/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS
+.DS_Store
