@@ -137,15 +137,19 @@ python -m tools.sync --full
 | `MAX_CHUNK_CHARS` | 单次翻译片段最大字符数 | `6000` |
 | `TRANSLATE_CONCURRENCY` | 并发翻译数（跨多 Key 扇出） | `6` |
 | `DEEPSEEK_TIMEOUT` | 单次请求超时（秒） | `300` |
+| `MAX_RETRIES_PER_KEY` | 每个 Key 的重试次数 | `3` |
 | `DEEPSEEK_TEMPERATURE` | 采样温度；不设则不发送（推理模型可能拒绝该参数） | 不发送 |
 | `UPSTREAM_REPO` | 上游仓库地址（完整 git URL） | `https://github.com/Cranot/claude-code-guide.git` |
 | `UPSTREAM_BRANCH` | 上游分支 | `main` |
+| `PROJECT_REPO_URL` | 本项目仓库地址（用于译文署名 banner） | 本仓库 URL |
+
+> 完整环境变量与默认值以 [`tools/config.py`](./tools/config.py) 为权威来源。
 
 > ℹ️ **关于模型**：`deepseek-v4-flash` 是真实可用的轻量推理模型（已对 API 实测）。它会单独返回 `reasoning_content` 并消耗少量推理 token，因此默认显式设置 `DEEPSEEK_MAX_TOKENS=8192` 以避免长段落被截断。可替换为 `deepseek-chat`（V3.x）或 `deepseek-reasoner`（R1）。
 
 ## 🤖 自动化流水线 / GitHub Actions
 
-[`.github/workflows/sync.yml`](./.github/workflows/sync.yml) 每小时（及手动触发）执行：拉取上游 → 与上次同步 commit 做 diff → DeepSeek 翻译变更 → 自动提交 `content/`。
+[`.github/workflows/sync.yml`](./.github/workflows/sync.yml) 每小时（及手动触发）执行：拉取上游 → 与上次同步 commit 做 diff → DeepSeek 翻译变更 → 自动提交 `content/`。手动触发（`workflow_dispatch`）时可勾选 `full` 选项强制全量重翻。
 
 **启用自动同步**：在仓库 `Settings → Secrets and variables → Actions` 添加：
 

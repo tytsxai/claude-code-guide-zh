@@ -70,7 +70,7 @@ PROJECT_REPO_URL = os.environ.get(
 
 # Attribution banner prepended to the translated front-page guide (content/README.md).
 # {repo_name}/{repo_url}/{author} = upstream source; {project_url} = THIS project.
-ATTRIBUTION_BANNER = """> **🌏 中文翻译版** · 本文档由机器自动翻译，并由 [`claude-code-guide-zh`]({project_url}) 流水线**每小时**持续同步自上游英文仓库
+ATTRIBUTION_BANNER = """> **🌏 非官方中文翻译版（机器翻译）** · 本文档由 [`claude-code-guide-zh`]({project_url}) 流水线**每小时**自动翻译并持续同步自上游英文仓库
 > [{repo_name}]({repo_url})（原作者 [@{author}](https://github.com/{author})）。
 > 译文仅供学习参考，**以[官方英文文档](https://code.claude.com/docs/en/overview)为准**；翻译问题欢迎到[本仓库]({project_url}/issues) 提 Issue。
 > 翻译引擎：DeepSeek。
