@@ -1,5 +1,7 @@
 # 常见问题 FAQ · claude-code-guide-zh
 
+> 🗿 **本项目已于 2026-07-20 归档**：Anthropic 官方已提供[简体中文文档](https://code.claude.com/docs/zh-CN/overview)，请优先阅读官方版本。本仓译文停留在上游 `712c838`（2026-02-14）。
+
 面向中文读者的常见问题；技术细节以 [`README.md`](../README.md) 与 [`tools/config.py`](../tools/config.py) 为准。
 
 **快速跳转**：[关于项目](#关于项目--about) · [使用](#使用--usage) · [翻译质量](#翻译质量--quality) · [成本与安全](#成本与安全--cost--security)

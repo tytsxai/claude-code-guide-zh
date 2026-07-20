@@ -5,6 +5,20 @@ Anthropic Claude Code Chinese guide / DeepSeek 文档自动翻译 / Markdown 翻
 
 # Claude Code 完全指南（中文版）· Claude Code Complete Guide in Chinese
 
+> # 🗿 本项目已归档（2026-07-20）
+>
+> **请优先阅读 Anthropic 官方简体中文文档 → <https://code.claude.com/docs/zh-CN/overview>**
+>
+> 归档原因：
+>
+> 1. **官方已提供简体中文文档**。Anthropic 官方文档站已上线 `zh-CN` 全站中文版（安装、Hooks、Skills、MCP、Settings、CLI 参考等均已覆盖），由官方维护、跟随产品版本实时更新，权威性与时效性均优于本项目的机器翻译镜像。
+> 2. **上游已停更**。本项目的上游 [`Cranot/claude-code-guide`](https://github.com/Cranot/claude-code-guide) 自 **2026-02-14**（commit `712c838`）起不再更新，本仓译文已完整同步至该提交。
+>
+> 仓库内容与自动翻译流水线代码原样保留，供存档与参考；定时同步任务已停用，不再接受新的翻译更新。**其中的版本信息截至 2026-02-14，请勿作为最新资料使用。**
+
+---
+
+
 > **一句话 / TL;DR**：这是 [Claude Code](https://github.com/anthropics/claude-code)（Anthropic 官方的终端 AI 编程助手 / agentic coding CLI）社区指南 [`Cranot/claude-code-guide`](https://github.com/Cranot/claude-code-guide) 的**中文镜像**，并附带一套**自动同步 + DeepSeek 机器翻译**的开源流水线，让中文译文持续跟随上游英文原文更新。
 >
 > **In one line**: A continuously auto-synced, machine-translated **Chinese mirror** of the Claude Code CLI guide, plus the open-source pipeline (Python + GitHub Actions + DeepSeek) that keeps the translation up to date with upstream.
@@ -12,7 +26,8 @@ Anthropic Claude Code Chinese guide / DeepSeek 文档自动翻译 / Markdown 翻
 [![上游 Upstream](https://img.shields.io/badge/上游-Cranot%2Fclaude--code--guide-black?logo=github)](https://github.com/Cranot/claude-code-guide)
 [![Claude Code](https://img.shields.io/badge/关于-Claude_Code-7c3aed?logo=anthropic)](https://github.com/anthropics/claude-code)
 [![翻译引擎 DeepSeek](https://img.shields.io/badge/翻译引擎-DeepSeek-5b6cff)](https://api.deepseek.com)
-[![同步状态 Sync](https://img.shields.io/badge/定时同步-已暂停（上游停更）-lightgrey)](#-自动化流水线--github-actions)
+[![状态 Status](https://img.shields.io/badge/状态-已归档%20Archived-red)](#)
+[![官方中文文档](https://img.shields.io/badge/请改用-官方简体中文文档-7c3aed)](https://code.claude.com/docs/zh-CN/overview)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](#-技术栈--tech-stack)
 
 ## 📖 直接阅读中文指南 / Read the Guide
@@ -23,10 +38,11 @@ Anthropic Claude Code Chinese guide / DeepSeek 文档自动翻译 / Markdown 翻
 > - ❓ [常见问题 · FAQ → `docs/FAQ.md`](./docs/FAQ.md)
 > - 🧩 [架构说明 · Architecture → `docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 > - 🗒️ [同步更新日志 · Sync Log → `content/update-log-zh.md`](./content/update-log-zh.md)
+> - ⭐ **[官方简体中文文档 · Official Chinese Docs → code.claude.com/docs/zh-CN](https://code.claude.com/docs/zh-CN/overview)**（推荐，持续更新）
 
 > ⚠️ 译文为机器自动翻译，**一切以[官方英文文档](https://code.claude.com/docs/en/overview)与[上游仓库](https://github.com/Cranot/claude-code-guide)为准**。本项目为非官方社区翻译。
 
-> 🗿 **维护状态（2026-07-20）**：上游 [`Cranot/claude-code-guide`](https://github.com/Cranot/claude-code-guide) 自 **2026-02-14**（commit `712c838`）起已停止更新。本仓译文**已完整同步到该提交**，内容与上游一致。因此每小时定时同步任务已暂停，仓库转入**维护模式**：内容保留可用，接受译文勘误 PR；若上游恢复更新，取消 [`sync.yml`](./.github/workflows/sync.yml) 中 `schedule` 的注释即可恢复自动同步，或直接手动触发一次 workflow。
+> 📌 本仓已归档，见页首说明；上游 `Cranot/claude-code-guide` 自 2026-02-14 起停更，译文停留在 commit `712c838`。
 
 ---
 
