@@ -12,7 +12,7 @@ Anthropic Claude Code Chinese guide / DeepSeek 文档自动翻译 / Markdown 翻
 [![上游 Upstream](https://img.shields.io/badge/上游-Cranot%2Fclaude--code--guide-black?logo=github)](https://github.com/Cranot/claude-code-guide)
 [![Claude Code](https://img.shields.io/badge/关于-Claude_Code-7c3aed?logo=anthropic)](https://github.com/anthropics/claude-code)
 [![翻译引擎 DeepSeek](https://img.shields.io/badge/翻译引擎-DeepSeek-5b6cff)](https://api.deepseek.com)
-[![自动同步 Auto-sync](https://img.shields.io/badge/自动同步-每小时-brightgreen)](#-自动化流水线--github-actions)
+[![同步状态 Sync](https://img.shields.io/badge/定时同步-已暂停（上游停更）-lightgrey)](#-自动化流水线--github-actions)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](#-技术栈--tech-stack)
 
 ## 📖 直接阅读中文指南 / Read the Guide
@@ -25,6 +25,8 @@ Anthropic Claude Code Chinese guide / DeepSeek 文档自动翻译 / Markdown 翻
 > - 🗒️ [同步更新日志 · Sync Log → `content/update-log-zh.md`](./content/update-log-zh.md)
 
 > ⚠️ 译文为机器自动翻译，**一切以[官方英文文档](https://code.claude.com/docs/en/overview)与[上游仓库](https://github.com/Cranot/claude-code-guide)为准**。本项目为非官方社区翻译。
+
+> 🗿 **维护状态（2026-07-20）**：上游 [`Cranot/claude-code-guide`](https://github.com/Cranot/claude-code-guide) 自 **2026-02-14**（commit `712c838`）起已停止更新。本仓译文**已完整同步到该提交**，内容与上游一致。因此每小时定时同步任务已暂停，仓库转入**维护模式**：内容保留可用，接受译文勘误 PR；若上游恢复更新，取消 [`sync.yml`](./.github/workflows/sync.yml) 中 `schedule` 的注释即可恢复自动同步，或直接手动触发一次 workflow。
 
 ---
 
@@ -54,7 +56,7 @@ Anthropic Claude Code Chinese guide / DeepSeek 文档自动翻译 / Markdown 翻
 - **章节级缓存 Chunk-level cache**：按内容哈希缓存翻译结果，未变动段落零成本复用。
 - **术语一致性 Terminology consistency**：[`glossary.json`](./glossary.json)（翻译时提示）+ [`fixups.json`](./fixups.json)（译后确定性修订）双层保证术语统一（如 `pipeline→流水线`、`sub-agents→子代理`、`Changelog→更新日志`）。
 - **密钥安全 Secret-safe**：API Key 仅来自环境变量 / GitHub Secrets，**绝不**硬编码或入库。
-- **CI 自动化 Automation**：[GitHub Actions](./.github/workflows/sync.yml) 每小时自动同步并提交译文。
+- **CI 自动化 Automation**：[GitHub Actions](./.github/workflows/sync.yml) 增量同步并提交译文（定时任务当前已暂停，可手动触发）。
 
 ## 🧱 技术栈 / Tech Stack
 
@@ -63,7 +65,7 @@ Anthropic Claude Code Chinese guide / DeepSeek 文档自动翻译 / Markdown 翻
 | 语言 Language | **Python 3.10+**（CI 使用 3.12，本地已在 3.14 验证） |
 | 依赖 Dependencies | 仅 [`requests`](./requirements.txt) **≥2.31,<3**（其余由标准库完成） |
 | 翻译模型 LLM | **DeepSeek** `deepseek-v4-flash`（默认）/ `deepseek-chat` / `deepseek-reasoner` |
-| 自动化 CI | **GitHub Actions**（cron + 手动触发） |
+| 自动化 CI | **GitHub Actions**（cron 已暂停 + 手动触发） |
 | 数据格式 | Markdown、JSON（状态 / 术语 / 缓存） |
 
 ## 🚀 快速开始 / Quick Start
@@ -149,7 +151,7 @@ python -m tools.sync --full
 
 ## 🤖 自动化流水线 / GitHub Actions
 
-[`.github/workflows/sync.yml`](./.github/workflows/sync.yml) 每小时（及手动触发）执行：拉取上游 → 与上次同步 commit 做 diff → DeepSeek 翻译变更 → 自动提交 `content/`。手动触发（`workflow_dispatch`）时可勾选 `full` 选项强制全量重翻。
+[`.github/workflows/sync.yml`](./.github/workflows/sync.yml) 执行：拉取上游 → 与上次同步 commit 做 diff → DeepSeek 翻译变更 → 自动提交 `content/`。手动触发（`workflow_dispatch`）时可勾选 `full` 选项强制全量重翻。
 
 **启用自动同步**：在仓库 `Settings → Secrets and variables → Actions` 添加：
 
@@ -175,7 +177,7 @@ API Key 全程只从 Secrets 注入，不出现在代码、日志或提交中。
 完整 FAQ 见 **[`docs/FAQ.md`](./docs/FAQ.md)**。最常见的几条：
 
 - **这是官方文档吗？** 不是。本项目是非官方社区翻译，**以官方英文为准**。
-- **译文有多新？** 流水线每小时检查上游，有更新即自动翻译提交。
+- **译文有多新？** 译文已同步至上游最新提交 `712c838`（2026-02-14）。上游自该日起未再更新，定时同步已暂停；上游恢复更新后手动触发或恢复 cron 即可继续。
 - **能换成别的模型/仓库吗？** 能。改 `DEEPSEEK_MODEL` 换模型，改 `UPSTREAM_REPO` 翻译其它英文 Markdown 仓库。
 - **为什么代码注释还是英文？** 有意为之 —— 代码区块逐字保留以保证准确与可执行。
 

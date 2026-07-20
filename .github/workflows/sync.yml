@@ -2,9 +2,13 @@ name: Sync & Translate
 
 # Pulls the latest upstream guide, translates changed Markdown into Chinese,
 # and commits the result. API keys come ONLY from repository Secrets.
+#
+# 定时同步已于 2026-07-20 停用：上游 Cranot/claude-code-guide 自 2026-02-14
+# (712c838) 起未再更新，本仓译文已同步到该提交，每小时定时任务连续数月空跑。
+# 若上游恢复更新，取消下方 schedule 注释即可恢复自动同步。
 on:
-  schedule:
-    - cron: "0 * * * *"   # hourly
+  # schedule:
+  #   - cron: "0 * * * *"   # hourly（上游停更，已停用）
   workflow_dispatch:       # manual trigger
     inputs:
       full:
